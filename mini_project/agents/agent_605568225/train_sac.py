@@ -17,6 +17,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
+import sys
+from tqdm import tqdm
+
 
 # Import environment
 from env import get_training_env, get_validation_env
@@ -24,6 +27,7 @@ from utils import make_envs, step_envs
 
 # Set the path to the current folder
 FOLDER_ROOT = pathlib.Path(__file__).parent
+sys.path.insert(0, str(FOLDER_ROOT.parent.parent))
 
 
 class ReplayBuffer:
@@ -373,12 +377,9 @@ def train_sac():
     hidden_dim = 256
     buffer_size = 1_000_000
     batch_size = 256
-    num_envs = 1  # Number of parallel environments
     updates_per_step = 1
     start_steps = 10000  # Random exploration steps
     max_steps = 1_000_000  # Total environment steps
-    eval_freq = 5000  # Evaluation frequency
-    eval_episodes = 10  # Number of evaluation episodes
     save_freq = 50000  # Model saving frequency
     
     # Create log directory
@@ -395,7 +396,6 @@ def train_sac():
     
     # Create environments
     env = get_training_env()
-    eval_env = get_validation_env()
     
     # Initialize SAC agent
     agent = SAC(
@@ -431,7 +431,7 @@ def train_sac():
     print("Starting training...")
     training_start_time = time.time()
     
-    while total_steps < max_steps:
+    for _ in tqdm(range(max_steps)):
         # Select action
         if total_steps < start_steps:
             # Random exploration
@@ -462,16 +462,6 @@ def train_sac():
                 writer.add_scalar('Loss/alpha', update_info['alpha_loss'], total_steps)
                 writer.add_scalar('Param/alpha', update_info['alpha'], total_steps)
         
-        # Evaluate the agent periodically
-        if total_steps % eval_freq == 0:
-            eval_reward, eval_completion, eval_success = evaluate_policy(agent, eval_env, eval_episodes)
-            writer.add_scalar('Eval/reward', eval_reward, total_steps)
-            writer.add_scalar('Eval/completion', eval_completion, total_steps)
-            writer.add_scalar('Eval/success_rate', eval_success, total_steps)
-            
-            print(f"Evaluation at step {total_steps}: "
-                  f"Reward: {eval_reward:.2f}, Completion: {eval_completion:.2f}, "
-                  f"Success Rate: {eval_success:.2f}")
         
         # Save model periodically
         if total_steps % save_freq == 0:
@@ -523,7 +513,6 @@ def train_sac():
     
     # Clean up
     env.close()
-    eval_env.close()
     writer.close()
 
 
