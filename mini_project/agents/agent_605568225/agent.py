@@ -113,8 +113,8 @@ class Policy:
     Do not change the name of this class.
     """
     # FILL YOUR PREFERRED NAME & UID HERE!
-    CREATOR_NAME = "Claude"  # Your preferred name here in a string
-    CREATOR_UID = "SAC-Agent"  # Your UID here in a string
+    CREATOR_NAME = "Hongzhe Du"  # Your preferred name here in a string
+    CREATOR_UID = "605568225"  # Your UID here in a string
     
     def __init__(self):
         # MetaDrive observation space is 259-dimensional vector
